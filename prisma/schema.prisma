@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+
+
+model products {
+  id        Int      @id @default(autoincrement())
+  title     String   @db.VarChar(50)
+  thumbnailUrl     String?   @db.VarChar(255)
+  content   String?  @db.Text()
+  price   Int? @default(0)
+  published Boolean  @default(false)
+  author_id  Int
+  category_id  Int?
+  author    users?     @relation(fields: [author_id], references: [id])
+  category    categories?     @relation(fields: [category_id], references: [id])
+  file_upload file_upload?
+  attachments attachments[]
+  order_item order_item[]
+  createdAt DateTime 
+  updatedAt DateTime? 
+
+}
+model attachments{
+    id        Int      @id @default(autoincrement())
+    name String @db.VarChar(50)
+    type attachmentType 
+    attachmentUrl String @db.VarChar(255)
+    products    products     @relation(fields: [product_id], references: [id])
+    product_id Int 
+}
+ 
+enum attachmentType {
+  img
+  video
+}
+model file_upload{
+    id        Int      @id @default(autoincrement())
+    name String @db.VarChar(100)
+    link_download String @db.VarChar(255)
+    products    products     @relation(fields: [product_id], references: [id])
+    product_id  Int @unique
+  }
+
+model categories{
+  id        Int      @id @default(autoincrement())
+  name String @db.VarChar(50)
+  products products[]
+}
+
+model users {
+  id      Int      @id @default(autoincrement())
+  name    String? @db.VarChar(50)
+  email   String   @unique @db.VarChar(50)
+  products   products[]
+  orders orders[]
+}
+
+
+model orders {
+  id        Int      @id @default(autoincrement())
+  users      users     @relation(fields: [user_id], references: [id])
+  user_id   Int
+  order_item  order_item[] 
+  total     Int
+  status    statusOrder   @default(pending)
+  createdAt DateTime 
+  updatedAt DateTime? 
+}
+
+enum statusOrder {
+  pending
+  completed
+}
+
+model order_item {
+  id        Int      @id @default(autoincrement())
+  orders     orders    @relation(fields: [order_id], references: [id])
+  order_id  Int
+  products      products     @relation(fields: [product_id], references: [id])
+  product_id   Int
+  price     Int
+}
